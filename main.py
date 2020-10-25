@@ -49,7 +49,7 @@ def send_categories(message):
     '''Высылает все категории трат'''
     text_message = f'📂 Категории расходов:'
     for category in categories:
-        text_message += f'\n\n{category}'
+        text_message += f'\n\n{category} - для удаления жми /del_category{categories.index(category) + 1}'
     bot.send_message(message.chat.id, text_message)
 
 
@@ -66,17 +66,24 @@ def add_category(message):
     bot.send_message(message.chat.id, f'⚠️ Категория не добавлена')
 
 
-@bot.message_handler(commands=['del_category'])
+@bot.message_handler(content_types=['text'])
 @auth
-def del_category(message):
-    '''Удаление категории из базы'''
-    category = message.text.replace('/del_category ', '')
-    if category in categories:
-        categories.remove(category)
+def delete_row(message):
+    '''Удаление строки из базы'''
+    # Удаление категории
+    if message.text.startswith('/del_category'):
+        category_id = int(message.text[len('/del_category'):]) - 1
+        print(category_id)
         bot.send_message(message.chat.id, 
-                        f'❌ Категория \'{category}\' удалена!')
+                        f'❌ Категория \'{categories[category_id]}\' удалена!')
+        categories.pop(category_id)
         return None
-    bot.send_message(message.chat.id, f'🔍 Категория не найдена')
+    # Удаление расход
+    else:
+        pass
+
+    bot.send_message(message.chat.id, 'Ничего не понял, но очень интересно!')
+    bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAOCX5UvkoequxNz4sv_VK4ngTbsbsoAAl8AA5KfHhEKnPzK-5zndBsE')
 
 
 @bot.message_handler(commands=['help'])
@@ -90,20 +97,6 @@ def all_commnads(message):
                         \n\n/add_category - Добавить категорию ✅\
                         \n\n/del_category - Удалить категорию ❌'
     )
-
-
-@bot.message_handler(content_types=['sticker'])
-@auth
-def send_info(message):
-    print(message)
-
-
-@bot.message_handler(content_types=['text'])
-@auth
-def send_text(message):
-    if message.text.lower() in ['привет', 'здарова', 'ку']:
-        sticker_id = 'CAACAgIAAxkBAAMiX5Q6iuDcIbCHVpHRBjgpW7xq8NIAAgEAA5KfHhEKX1MC7Bfm9hsE'
-        bot.send_sticker(message.chat.id, sticker_id)
 
 
 @bot.message_handler(content_types=['video', 'document', 'audio', 'sticker'])
