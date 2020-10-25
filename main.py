@@ -12,6 +12,8 @@ categories = [
     '🗑 Прочее(other)'
 ]
 
+expenses = []
+
 API_TOKEN = os.environ.get('API_TOKEN') or '1346588563:AAF_oQ-fzmC2IfdcMWYL-2p_Hc3SYt1-BE8'
 ADMIN_ID = 746354179
 bot = telebot.TeleBot(API_TOKEN, parse_mode=None)
@@ -35,12 +37,17 @@ def start(message):
                     \nУзнай функционал бота, тыкнув на комманду 👉 /help'
     bot.send_message(message.chat.id, text_message)
 
-
-@bot.message_handler(commands=['add_expense'])
+@bot.message_handler(commands=['help'])
 @auth
-def add_expense(message):
-    '''Добавить трату'''
-    pass
+def all_commnads(message):
+    '''Высылает список комманд бота'''
+    bot.send_message(message.chat.id,
+                    f'⚒ Функционал:\
+                        \n\n/start - Приветствие 👋\
+                        \n\n/categories - Список категорий трат 📖\
+                        \n\n/add_category - Добавить категорию ✅\
+                        \n\n/del_category - Удалить категорию ❌'
+    )
 
 
 @bot.message_handler(commands=['categories'])
@@ -51,6 +58,27 @@ def send_categories(message):
     for category in categories:
         text_message += f'\n\n{category} - для удаления жми /del_category{categories.index(category) + 1}'
     bot.send_message(message.chat.id, text_message)
+
+@bot.message_handler(commands=['expensies'])
+@auth
+def send_expenses(message):
+    '''Высылает все траты'''
+    text_message = '💰 Траты:'
+    for expense in expenses:
+        text_message += f'\n\n💵 {expense} - для удаления жми /del_expense{expenses.index(expense) + 1}'
+    bot.send_message(message.chat.id, text_message)
+
+@bot.message_handler(commands=['add_expense'])
+@auth
+def add_expense(message):
+    '''Добавить трату'''
+    expense = message.text.replace('/add_expense', '')[1:]
+    if expense:
+        expenses.insert(-1, expense)
+        bot.send_message(message.chat.id, 
+                        f'👍 Расход \'{expense}\' добавлен в ваш список')
+        return None
+    bot.send_message(message.chat.id, f'⚠️ Расход не добавлен')
 
 
 @bot.message_handler(commands=['add_category'])
@@ -70,33 +98,27 @@ def add_category(message):
 @auth
 def delete_row(message):
     '''Удаление строки из базы'''
+
     # Удаление категории
     if message.text.startswith('/del_category'):
         category_id = int(message.text[len('/del_category'):]) - 1
-        print(category_id)
         bot.send_message(message.chat.id, 
                         f'❌ Категория \'{categories[category_id]}\' удалена!')
         categories.pop(category_id)
         return None
+
     # Удаление расход
-    else:
-        pass
+    elif message.text.startswith('/del_expense'):
+        expense_id = int(message.text[len('/del_expense'):]) - 1
+        bot.send_message(message.chat.id, 
+                        f'❌ Трата \'{expenses[expense_id]}\' удалена!')
+        expenses.pop(expense_id)
+        return None
 
     bot.send_message(message.chat.id, 'Ничего не понял, но очень интересно!')
     bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAOCX5UvkoequxNz4sv_VK4ngTbsbsoAAl8AA5KfHhEKnPzK-5zndBsE')
 
 
-@bot.message_handler(commands=['help'])
-@auth
-def all_commnads(message):
-    '''Высылает список комманд бота'''
-    bot.send_message(message.chat.id,
-                    f'⚒ Функционал:\
-                        \n\n/start - Приветствие 👋\
-                        \n\n/categories - Список категорий трат 📖\
-                        \n\n/add_category - Добавить категорию ✅\
-                        \n\n/del_category - Удалить категорию ❌'
-    )
 
 
 @bot.message_handler(content_types=['video', 'document', 'audio', 'sticker'])
